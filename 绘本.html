@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>迟到的课堂 - 感知体验游戏</title>
+
+<style>
+/* 页面基础样式 */
+body{
+    margin:0;
+    font-family:"Microsoft YaHei",sans-serif;
+    background:#eef3f8;
+    color:#333;
+}
+
+/* 游戏主体区域 */
+.game-container{
+    width:700px;
+    margin:40px auto;
+    background:white;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0 5px 20px rgba(0,0,0,.15);
+}
+
+
+/* 标题 */
+h1{
+    text-align:center;
+}
+
+
+/* 信息显示区域 */
+.info-box{
+    background:#f5f7fa;
+    padding:20px;
+    border-radius:15px;
+    line-height:1.8;
+    min-height:120px;
+}
+
+
+/* 按钮 */
+button{
+    width:100%;
+    padding:15px;
+    margin-top:15px;
+    border:none;
+    border-radius:10px;
+    background:#6c9cff;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+}
+
+
+/* 鼠标悬停效果 */
+button:hover{
+    background:#507de0;
+}
+
+
+/* 感官提示 */
+.sensor{
+    margin-top:20px;
+    padding:15px;
+    background:#fff3cd;
+    border-radius:10px;
+}
+
+
+#result{
+    margin-top:20px;
+    font-weight:bold;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="game-container">
+
+<h1>迟到的课堂</h1>
+
+
+<!-- 当前故事文本 -->
+<div class="info-box" id="story">
+</div>
+
+
+<!-- 感官信息 -->
+<div class="sensor" id="sensor">
+</div>
+
+
+<!-- 玩家选择区域 -->
+<div id="choices"></div>
+
+
+<!-- 结果反馈 -->
+<div id="result"></div>
+
+
+</div>
+
+
+
+<script>
+
+
+/*
+    游戏数据结构
+
+    每一个场景(scene)
+    包含：
+    text      : 当前角色看到的信息
+    sensor    : 感官体验描述
+    choices   : 用户可选择行为
+*/
+
+
+let scenes = {
+
+
+start:{
+
+text:
+`
+我是小宇，今年8岁。
+
+今天早上，我走进学校时，
+发现教室里的同学已经开始上课。
+
+老师停下来看着我。
+
+很多声音同时出现：
+同学翻书的声音、椅子的声音、老师讲话的声音。
+
+我感觉信息一下子变多了。
+`,
+
+sensor:
+`
+你的感受：
+🔊 声音：多个声音同时进入注意范围
+👀 视觉：很多人在看向你
+🧠 思考：需要判断下一步应该做什么
+`,
+
+choices:[
+
+{
+text:"马上走进教室，说：“老师，对不起，我迟到了。”",
+next:"apology"
+},
+
+{
+text:"站在门口观察教室，等自己感觉准备好了再进去。",
+next:"wait"
+},
+
+{
+text:"低头快速走到座位，不和任何人交流。",
+next:"silent"
+}
+
+]
+
+},
+
+
+
+apology:{
+
+text:
+`
+你鼓起勇气进入教室。
+
+老师说：
+“没关系，请坐下。”
+
+但是你发现：
+所有同学的目光仍然停留了一会儿。
+
+你开始担心：
+“他们是不是觉得我很奇怪？”
+`,
+
+sensor:
+`
+你的体验：
+✔ 你完成了进入教室的任务
+⚠ 但别人的目光可能让你感到压力
+`,
+
+choices:[
+{
+text:"坐下，打开课本，继续听课。",
+next:"good"
+},
+{
+text:"觉得压力太大，请求老师帮助。",
+next:"help"
+}
+
+]
+
+},
+
+
+
+wait:{
+
+text:
+`
+你站在门口。
+
+你需要更多时间理解：
+现在发生了什么？
+别人为什么看着我？
+
+几秒后，老师走过来说：
+“你可以进来坐下。”
+`,
+
+sensor:
+`
+你的体验：
+🧩 需要更多时间处理环境信息
+🌱 有支持时，进入环境会更容易
+`,
+
+choices:[
+{
+text:"接受老师帮助进入课堂。",
+next:"good"
+},
+{
+text:"仍然觉得紧张，选择离开。",
+next:"leave"
+}
+
+]
+
+},
+
+
+
+silent:{
+
+text:
+`
+你快速走到座位。
+
+没有人责怪你。
+
+但是老师发现你看起来很紧张，
+于是课后询问你的情况。
+`,
+
+sensor:
+`
+你的体验：
+✔ 避免了一些交流压力
+⚠ 但别人可能不了解你的真实感受
+`,
+
+choices:[
+{
+text:"告诉老师刚才自己感到紧张。",
+next:"help"
+}
+]
+
+},
+
+
+
+
+good:{
+
+text:
+`
+课堂继续进行。
+
+你慢慢适应了环境。
+
+你发现：
+虽然刚才很困难，
+但有人愿意理解你的感受。
+`,
+
+sensor:
+`
+故事结束：
+理解不是要求每个人一样，
+而是知道每个人接收世界的方式可能不同。
+`,
+
+choices:[
+{
+text:"重新体验故事",
+next:"start"
+}
+]
+
+},
+
+
+
+help:{
+
+text:
+`
+老师了解你的情况后，
+以后会提前告诉你课堂变化。
+
+下次进入教室时，
+你感觉更有准备。
+`,
+
+sensor:
+`
+故事结束：
+支持和沟通可以减少环境带来的压力。
+`,
+
+choices:[
+{
+text:"重新体验故事",
+next:"start"
+}
+]
+
+},
+
+
+
+
+leave:{
+
+text:
+`
+你离开了教室。
+
+你并不是不想学习，
+只是此刻环境中的信息太多，
+需要一个安静的空间。
+`,
+
+sensor:
+`
+故事结束：
+每个人都有不同的舒适范围。
+理解差异，可以创造更友好的环境。
+`,
+
+choices:[
+{
+text:"重新体验故事",
+next:"start"
+}
+]
+
+}
+
+
+};
+
+
+
+
+// 当前场景
+let currentScene="start";
+
+
+
+// 加载场景函数
+function loadScene(sceneName){
+
+
+let scene=scenes[sceneName];
+
+currentScene=sceneName;
+
+
+// 显示故事文字
+document.getElementById("story").innerHTML=
+scene.text;
+
+
+// 显示感官信息
+document.getElementById("sensor").innerHTML=
+scene.sensor;
+
+
+// 清空结果
+document.getElementById("result").innerHTML="";
+
+
+// 生成按钮
+
+let choiceArea=document.getElementById("choices");
+
+choiceArea.innerHTML="";
+
+
+scene.choices.forEach(function(choice){
+
+
+let btn=document.createElement("button");
+
+btn.innerHTML=choice.text;
+
+
+/*
+    点击按钮后：
+    进入下一剧情节点
+*/
+btn.onclick=function(){
+
+loadScene(choice.next);
+
+};
+
+
+choiceArea.appendChild(btn);
+
+
+});
+
+
+}
+
+
+
+// 游戏启动
+loadScene("start");
+
+
+
+</script>
+
+
+</body>
+</html>
